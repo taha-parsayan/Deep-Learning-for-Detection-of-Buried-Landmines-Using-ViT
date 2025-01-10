@@ -5,16 +5,17 @@ image classification data.
 import os
 
 from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 
 NUM_WORKERS = os.cpu_count()
 
 def create_dataloaders(
     train_dir: str, 
-    test_dir: str, 
-    transform: transforms.Compose, 
+    test_dir: str,
+    transform: transforms.Compose,
     batch_size: int, 
-    num_workers: int=NUM_WORKERS
+    num_workers: int=NUM_WORKERS,
+    augmentation_transform: transforms.Compose = None  # Default to None
 ):
   """Creates training and testing DataLoaders.
 
@@ -46,6 +47,16 @@ def create_dataloaders(
   # Get class names
   class_names = train_data.classes
 
+  # If there is augmentation
+  if augmentation_transform is not None:
+
+    augmentation_train_data = datasets.ImageFolder(train_dir, transform=augmentation_transform)
+    augmentation_test_data = datasets.ImageFolder(test_dir, transform=augmentation_transform)
+
+    train_data = ConcatDataset([train_data, augmentation_train_data])
+    test_data = ConcatDataset([test_data, augmentation_test_data])
+
+
   # Turn images into data loaders
   train_dataloader = DataLoader(
       train_data,
@@ -61,5 +72,6 @@ def create_dataloaders(
       num_workers=num_workers,
       pin_memory=True,
   )
+
 
   return train_dataloader, test_dataloader, class_names
