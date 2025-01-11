@@ -1,11 +1,10 @@
 """
-Contains functions for training and testing a PyTorch model.
+Contains functions for training and testing a PyTorch model with support for binary, 3-class, and 5-class classification.
 """
 import torch
-from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.metrics import confusion_matrix, f1_score, classification_report
 from tqdm.auto import tqdm
 from typing import Dict, List, Tuple
-
 
 
 def train_step(model: torch.nn.Module, 
@@ -13,113 +12,89 @@ def train_step(model: torch.nn.Module,
                loss_fn: torch.nn.Module, 
                optimizer: torch.optim.Optimizer,
                device: torch.device) -> Tuple[float, float]:
-    """Trains a PyTorch model for a single epoch.
-
-    Turns a target PyTorch model to training mode and then
-    runs through all of the required training steps (forward
-    pass, loss calculation, optimizer step).
-
-    Args:
-    model: A PyTorch model to be trained.
-    dataloader: A DataLoader instance for the model to be trained on.
-    loss_fn: A PyTorch loss function to minimize.
-    optimizer: A PyTorch optimizer to help minimize the loss function.
-    device: A target device to compute on (e.g. "cuda" or "cpu").
-
-    Returns:
-    A tuple of training loss and training accuracy metrics.
-    In the form (train_loss, train_accuracy). For example:
-
-    (0.1112, 0.8743)
-    """
-    # Put model in train mode
+    """Trains a PyTorch model for a single epoch."""
     model.train()
+    train_loss, correct_preds, total_preds = 0, 0, 0
 
-    # Setup train loss and train accuracy values
-    train_loss, train_acc = 0, 0
-
-    # Loop through data loader data batches
-    for batch, (X, y) in enumerate(dataloader):
-        # Send data to target device
+    for X, y in dataloader:
         X, y = X.to(device), y.to(device)
 
-        # 1. Forward pass
+        # Forward pass
         y_pred = model(X)
 
-        # 2. Calculate and accumulate loss
+        # Calculate loss
         loss = loss_fn(y_pred, y)
         train_loss += loss.item()
 
-        # 3. Optimizer zero grad
+        # Optimizer steps
         optimizer.zero_grad()
-
-        # 4. Loss backward
         loss.backward()
-
-        # 5. Optimizer step
         optimizer.step()
 
-        # Calculate and accumulate accuracy metric across all batches
-        # Use argmax directly on the logits (no need for softmax)
-        y_pred_class = torch.argmax(y_pred, dim=1)
-        train_acc += (y_pred_class == y).sum().item() / len(y_pred)
+        # Accuracy
+        correct_preds += (torch.argmax(y_pred, dim=1) == y).sum().item()
+        total_preds += len(y)
 
-    # Adjust metrics to get average loss and accuracy per batch 
     train_loss = train_loss / len(dataloader)
-    train_acc = train_acc / len(dataloader)
+    train_acc = correct_preds / total_preds
     return train_loss, train_acc
 
 
 def test_step(model: torch.nn.Module, 
               dataloader: torch.utils.data.DataLoader, 
               loss_fn: torch.nn.Module,
-              device: torch.device) -> Tuple[float, float, float, float, float]:
-    """Tests a PyTorch model for a single epoch and calculates additional metrics."""
-    # Put model in eval mode
+              device: torch.device) -> Tuple[float, float, Dict[str, float], str]:
+    """Tests a PyTorch model for a single epoch and calculates metrics for binary, 3-class, or 5-class classification."""
     model.eval()
-
-    # Setup test loss and accuracy values
-    test_loss, correct_predictions, total_predictions = 0, 0, 0
+    test_loss, correct_preds, total_preds = 0, 0, 0
     all_preds, all_labels = [], []
 
-    # Turn on inference context manager
     with torch.inference_mode():
-        # Loop through DataLoader batches
-        for batch, (X, y) in enumerate(dataloader):
-            # Send data to target device
+        for X, y in dataloader:
             X, y = X.to(device), y.to(device)
 
-            # 1. Forward pass
-            test_pred_logits = model(X)
+            # Forward pass
+            y_pred_logits = model(X)
 
-            # 2. Calculate and accumulate loss
-            loss = loss_fn(test_pred_logits, y)
+            # Calculate loss
+            loss = loss_fn(y_pred_logits, y)
             test_loss += loss.item()
 
-            # Calculate and accumulate correct predictions
-            test_pred_labels = test_pred_logits.argmax(dim=1)
-            correct_predictions += (test_pred_labels == y).sum().item()
-            total_predictions += len(y)
+            # Predictions
+            y_pred_labels = torch.argmax(y_pred_logits, dim=1)
+            correct_preds += (y_pred_labels == y).sum().item()
+            total_preds += len(y)
 
-            # Store predictions and true labels for metrics calculation
-            all_preds.extend(test_pred_labels.cpu().numpy())
+            # Store predictions for metrics
+            all_preds.extend(y_pred_labels.cpu().numpy())
             all_labels.extend(y.cpu().numpy())
 
-    # Calculate accuracy as the ratio of correct predictions to total predictions
-    test_acc = correct_predictions / total_predictions
-
-    # Adjust metrics to get average loss per batch
+    # Accuracy
+    test_acc = correct_preds / total_preds
     test_loss = test_loss / len(dataloader)
 
-    # Calculate confusion matrix
+    # Confusion matrix
     cm = confusion_matrix(all_labels, all_preds)
-    
-    # Calculate sensitivity, specificity, and F1 score
-    sensitivity = cm[1, 1] / (cm[1, 1] + cm[1, 0]) if (cm[1, 1] + cm[1, 0]) > 0 else 0
-    specificity = cm[0, 0] / (cm[0, 0] + cm[0, 1]) if (cm[0, 0] + cm[0, 1]) > 0 else 0
+
+    # Sensitivity, Specificity, and F1 per class
+    metrics = {}
+    for class_index in range(len(cm)):
+        tp = cm[class_index, class_index]
+        fn = cm[class_index, :].sum() - tp
+        fp = cm[:, class_index].sum() - tp
+        tn = cm.sum() - (tp + fn + fp)
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        metrics[f'class_{class_index}_sensitivity'] = sensitivity
+        metrics[f'class_{class_index}_specificity'] = specificity
+
+    # Weighted F1 score
     f1 = f1_score(all_labels, all_preds, average='weighted')
 
-    return test_loss, test_acc, sensitivity, specificity, f1
+    # Classification report for detailed per-class metrics
+    classification_summary = classification_report(all_labels, all_preds)
+
+    return test_loss, test_acc, metrics, classification_summary
 
 
 def train(model: torch.nn.Module, 
@@ -130,51 +105,49 @@ def train(model: torch.nn.Module,
           epochs: int,
           device: torch.device) -> Dict[str, List]:
     """Trains and tests a PyTorch model, returning evaluation metrics."""
-    # Create empty results dictionary
-    results = {"train_loss": [],
-               "train_acc": [],
-               "test_loss": [],
-               "test_acc": [],
-               "test_sensitivity": [],
-               "test_specificity": [],
-               "test_f1": []
+    results = {
+        "train_loss": [],
+        "train_acc": [],
+        "test_loss": [],
+        "test_acc": [],
+        "test_metrics": [],
+        "classification_summaries": []
     }
-    
-    # Make sure model on target device
+
     model.to(device)
 
-    # Loop through training and testing steps for a number of epochs
     for epoch in tqdm(range(epochs)):
-        train_loss, train_acc = train_step(model=model,
-                                          dataloader=train_dataloader,
-                                          loss_fn=loss_fn,
-                                          optimizer=optimizer,
-                                          device=device)
-        test_loss, test_acc, sensitivity, specificity, f1 = test_step(model=model,
-                                                                      dataloader=test_dataloader,
-                                                                      loss_fn=loss_fn,
-                                                                      device=device)
-
-        # Print out what's happening
-        print(
-          f"Epoch: {epoch+1} | "
-          f"train_loss: {train_loss:.4f} | "
-          f"train_acc: {train_acc:.4f} | "
-          f"test_loss: {test_loss:.4f} | "
-          f"test_acc: {test_acc:.4f} | "
-          f"test_sensitivity: {sensitivity:.4f} | "
-          f"test_specificity: {specificity:.4f} | "
-          f"test_f1: {f1:.4f}"
+        train_loss, train_acc = train_step(
+            model=model,
+            dataloader=train_dataloader,
+            loss_fn=loss_fn,
+            optimizer=optimizer,
+            device=device
+        )
+        test_loss, test_acc, metrics, classification_summary = test_step(
+            model=model,
+            dataloader=test_dataloader,
+            loss_fn=loss_fn,
+            device=device
         )
 
-        # Update results dictionary
+        # Log progress
+        print(
+            f"Epoch: {epoch+1} | "
+            f"train_loss: {train_loss:.4f} | "
+            f"train_acc: {train_acc:.4f} | "
+            f"test_loss: {test_loss:.4f} | "
+            f"test_acc: {test_acc:.4f}"
+        )
+        for class_index, sensitivity in metrics.items():
+            print(f"{class_index}: {sensitivity:.4f}")
+
+        # Store results
         results["train_loss"].append(train_loss)
         results["train_acc"].append(train_acc)
         results["test_loss"].append(test_loss)
         results["test_acc"].append(test_acc)
-        results["test_sensitivity"].append(sensitivity)
-        results["test_specificity"].append(specificity)
-        results["test_f1"].append(f1)
+        results["test_metrics"].append(metrics)
+        results["classification_summaries"].append(classification_summary)
 
-    # Return the filled results at the end of the epochs
     return results
