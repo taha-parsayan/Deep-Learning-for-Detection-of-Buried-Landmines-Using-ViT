@@ -36,11 +36,15 @@ def create_landmine_folders_3_class(dest_root, landmine_types):
 def copy_images_to_landmine_folders_3_class(source_root, dest_root, landmine_types, date_folders):
     for class_name, sub_classes in landmine_types.items():
         for sub_class in sub_classes:
-            sub_class_path = os.path.join(source_root, sub_class)
-            target_class_path = os.path.join(dest_root, class_name)
-            if os.path.exists(sub_class_path):
-                for file in os.listdir(sub_class_path):
-                    shutil.copy(os.path.join(sub_class_path, file), target_class_path)
+            for date_folder in date_folders:  # Include date_folders in the path
+                sub_class_path = os.path.join(source_root, date_folder, 'JPG', sub_class)
+                target_class_path = os.path.join(dest_root, class_name)
+                if os.path.exists(sub_class_path):
+                    for file in os.listdir(sub_class_path):
+                        src_file = os.path.join(sub_class_path, file)
+                        dest_file = os.path.join(target_class_path, f"{date_folder}_{file}")
+                        shutil.copy(src_file, dest_file)
+
 
 # Function to create folders for 2-class structure
 def create_landmine_folders_2_class(dest_root, landmine_types):
@@ -55,8 +59,12 @@ def create_landmine_folders_2_class(dest_root, landmine_types):
 def copy_images_to_landmine_folders_2_class(source_root, dest_root, landmine_types, date_folders):
     for class_name, sub_classes in landmine_types.items():
         for sub_class in sub_classes:
-            sub_class_path = os.path.join(source_root, sub_class)
-            target_class_path = os.path.join(dest_root, class_name)
-            if os.path.exists(sub_class_path):
-                for file in os.listdir(sub_class_path):
-                    shutil.copy(os.path.join(sub_class_path, file), target_class_path)
+            for date_folder in date_folders:  # Include date_folders in the path
+                sub_class_path = os.path.join(source_root, date_folder, 'JPG', sub_class)
+                target_class_path = os.path.join(dest_root, class_name)
+                if os.path.exists(sub_class_path):
+                    for file in os.listdir(sub_class_path):
+                        src_file = os.path.join(sub_class_path, file)
+                        dest_file = os.path.join(target_class_path, f"{date_folder}_{file}")
+                        shutil.copy(src_file, dest_file)
+
