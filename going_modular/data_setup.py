@@ -51,10 +51,10 @@ def create_dataloaders(
   if augmentation_transform is not None:
 
     augmentation_train_data = datasets.ImageFolder(train_dir, transform=augmentation_transform)
-    augmentation_test_data = datasets.ImageFolder(test_dir, transform=augmentation_transform)
+    #augmentation_test_data = datasets.ImageFolder(test_dir, transform=augmentation_transform)
 
     train_data = ConcatDataset([train_data, augmentation_train_data])
-    test_data = ConcatDataset([test_data, augmentation_test_data])
+    #test_data = ConcatDataset([test_data, augmentation_test_data])
 
 
   # Turn images into data loaders
