@@ -3,14 +3,14 @@ import shutil
 import glob
 
 # Function to create folders for landmine types (5-class structure)
-def create_landmine_folders_5_class(dest_root, landmine_types):
+def create_landmine_folders_phase_3(dest_root, landmine_types):
     for landmine_type in landmine_types:
         landmine_folder_path = os.path.join(dest_root, landmine_type)
         if not os.path.exists(landmine_folder_path):
             os.makedirs(landmine_folder_path, exist_ok=True)
 
 # Function to copy images to corresponding folders (5-class structure)
-def copy_images_to_landmine_folders_5_class(source_root, dest_root, landmine_types, date_folders):
+def copy_images_to_landmine_folders_phase_3(source_root, dest_root, landmine_types, date_folders):
     for landmine_type in landmine_types:
         for date_folder in date_folders:
             source_folder_path = os.path.join(source_root, date_folder, 'JPG', landmine_type)
@@ -24,7 +24,7 @@ def copy_images_to_landmine_folders_5_class(source_root, dest_root, landmine_typ
                 shutil.copy2(jpg_file, dest_file_path)
 
 # Function to create folders for 3-class structure
-def create_landmine_folders_3_class(dest_root, landmine_types):
+def create_landmine_folders_phase_2(dest_root, landmine_types):
     if not os.path.exists(dest_root):
         os.makedirs(dest_root)
     for class_name in landmine_types.keys():
@@ -33,7 +33,7 @@ def create_landmine_folders_3_class(dest_root, landmine_types):
             os.makedirs(class_folder_path)
 
 # Function to copy images to corresponding folders (3-class structure)
-def copy_images_to_landmine_folders_3_class(source_root, dest_root, landmine_types, date_folders):
+def copy_images_to_landmine_folders_phase_2(source_root, dest_root, landmine_types, date_folders):
     for class_name, sub_classes in landmine_types.items():
         for sub_class in sub_classes:
             for date_folder in date_folders:  # Include date_folders in the path
@@ -47,7 +47,7 @@ def copy_images_to_landmine_folders_3_class(source_root, dest_root, landmine_typ
 
 
 # Function to create folders for 2-class structure
-def create_landmine_folders_2_class(dest_root, landmine_types):
+def create_landmine_folders_phase_1(dest_root, landmine_types):
     if not os.path.exists(dest_root):
         os.makedirs(dest_root)
     for class_name in landmine_types.keys():
@@ -56,7 +56,7 @@ def create_landmine_folders_2_class(dest_root, landmine_types):
             os.makedirs(class_folder_path)
 
 # Function to copy images to corresponding folders (2-class structure)
-def copy_images_to_landmine_folders_2_class(source_root, dest_root, landmine_types, date_folders):
+def copy_images_to_landmine_folders_phase_1(source_root, dest_root, landmine_types, date_folders):
     for class_name, sub_classes in landmine_types.items():
         for sub_class in sub_classes:
             for date_folder in date_folders:  # Include date_folders in the path
