@@ -1,6 +1,3 @@
-"""
-Contains functions for training and testing a PyTorch model with support for binary, 3-class, and 5-class classification.
-"""
 import torch
 from sklearn.metrics import confusion_matrix, f1_score, classification_report
 from tqdm.auto import tqdm
@@ -83,7 +80,10 @@ def test_step(model: torch.nn.Module,
         fn = cm[class_index, :].sum() - tp
         fp = cm[:, class_index].sum() - tp
         tn = cm.sum() - (tp + fn + fp)
+        
+        # Sensitivity (True Positive Rate)
         sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        # Specificity (True Negative Rate)
         specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
         metrics[f'class_{class_index}_sensitivity'] = sensitivity
         metrics[f'class_{class_index}_specificity'] = specificity
@@ -93,6 +93,9 @@ def test_step(model: torch.nn.Module,
 
     # Classification report for detailed per-class metrics
     classification_summary = classification_report(all_labels, all_preds)
+
+    # Add the overall F1 score to metrics
+    metrics['weighted_f1_score'] = f1
 
     return test_loss, test_acc, metrics, classification_summary
 
