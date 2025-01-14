@@ -17,8 +17,15 @@ Data: Free zone, 0cm depth mine, 1cm depth mine, 5cm depth mine, 10 cm depth min
 
 ![image](https://github.com/user-attachments/assets/2f1a06ca-c202-4499-9a2e-6515f1485222)
 
+## Results
+
 Phase 1 of classification: Free zone vs. Land mine (all mine classes)
+Train accuracy: 93%
+Test accuracy: 84%
+
 Phase 2 of classification: Surface mine (0cm & 1cm depth) vs. Deep mine (5cm & 10cm depth)
+Train accuracy: 86%
+Test accuracy: 75%
 
 ## Dataset
 
