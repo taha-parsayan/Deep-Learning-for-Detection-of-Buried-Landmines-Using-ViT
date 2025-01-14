@@ -45,7 +45,7 @@ To access the dataset:
 1. Visit the [dataset link](https://www.sciencedirect.com/science/article/pii/S2352340923005437#refdata001).
 2. Follow the instructions on the website to download the data.
 
-### Classification model:
+## Classification model:
 The pre-trained ViT classifier was used. Through transfer-learning, all the layers were frozen. Then the head layer was modified for 2 classes and a drop-out with 20% probability.
 
 ![image](https://github.com/user-attachments/assets/c61b99b1-b8e0-4149-9563-da2c1f3f65e4)
