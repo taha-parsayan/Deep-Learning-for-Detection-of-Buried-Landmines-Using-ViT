@@ -15,7 +15,8 @@ This project utilizes a Vision Transformer (ViT) model for classifying land mine
 
 Data: Free zone, 0cm depth mine, 1cm depth mine, 5cm depth mine, 10 cm depth mine
 
-![image](https://github.com/user-attachments/assets/2f1a06ca-c202-4499-9a2e-6515f1485222)
+![image](https://github.com/user-attachments/assets/8a4b839c-c252-4ce4-b8d7-8db7c6239b52)
+
 
 ## Results
 
