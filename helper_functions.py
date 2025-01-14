@@ -292,3 +292,48 @@ def download_data(source: str,
             os.remove(data_path / target_file)
     
     return image_path
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, roc_auc_score
+
+
+def plot_roc_auc(model: torch.nn.Module, 
+                 dataloader: torch.utils.data.DataLoader, 
+                 device: torch.device) -> None:
+    """
+    Plots the ROC curve and calculates the AUC for a binary classification model.
+    
+    Parameters:
+        model (torch.nn.Module): Trained PyTorch model.
+        dataloader (torch.utils.data.DataLoader): DataLoader for the dataset.
+        device (torch.device): Device to perform computations on (e.g., "cuda" or "cpu").
+    """
+    model.eval()  # Set the model to evaluation mode
+    all_labels = []
+    all_probs = []
+    
+    with torch.inference_mode():
+        for X, y in dataloader:
+            X, y = X.to(device), y.to(device)
+            y_pred_logits = model(X)
+            
+            # Convert logits to probabilities
+            y_pred_probs = torch.softmax(y_pred_logits, dim=1)[:, 1]  # Probability of class 1
+            
+            all_labels.extend(y.cpu().numpy())
+            all_probs.extend(y_pred_probs.cpu().numpy())
+    
+    # Calculate ROC curve and AUC
+    fpr, tpr, _ = roc_curve(all_labels, all_probs)
+    auc = roc_auc_score(all_labels, all_probs)
+    
+    # Plot ROC curve
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='blue', label=f'AUC = {auc:.2f}')
+    plt.plot([0, 1], [0, 1], linestyle='--', color='red')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.legend(loc='lower right')
+    plt.grid(alpha=0.3)
+    plt.show()
