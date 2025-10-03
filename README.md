@@ -7,7 +7,7 @@
 # Classification of landmines using computer vision
 
 ---
-## (Publication in IEEE)[https://ieeexplore.ieee.org/abstract/document/11166148]
+### [Publication in IEEE](https://ieeexplore.ieee.org/abstract/document/11166148)
 ---
 
 This repository contains code and resources for detecting and classifying land mines. The primary goal is to analyze and classify data derived from ground-penetrating radar and other sensors. The codebase supports machine learning techniques to ensure accurate and efficient classification.
