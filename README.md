@@ -4,7 +4,11 @@
 ![Static Badge](https://img.shields.io/badge/Torch%20Vision-8A2BE2)
 ![Static Badge](https://img.shields.io/badge/Python-4CAF50)
 
-# Classification of landmine using computer vision
+# Classification of landmines using computer vision
+
+---
+## (Publication in IEEE)[https://ieeexplore.ieee.org/abstract/document/11166148]
+---
 
 This repository contains code and resources for detecting and classifying land mines. The primary goal is to analyze and classify data derived from ground-penetrating radar and other sensors. The codebase supports machine learning techniques to ensure accurate and efficient classification.
 This project utilizes a Vision Transformer (ViT) model for classifying land mines using image data. The ViT model, specifically the vit_b_16 variant from the PyTorch torchvision library, is employed with pretrained weights as a feature extractor. The method involves:
